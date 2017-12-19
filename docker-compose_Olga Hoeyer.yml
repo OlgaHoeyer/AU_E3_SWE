@@ -1,0 +1,43 @@
+#E3 SWE Examen-opgave
+#14.12.2017
+#Olga Høyer (stud nr 201510923)
+#
+#Opgaven består i at skabe en docker-compose fil, der beskriver en simpel web service.
+# Servicen består af 
+# 1. container: en NGINX front end, der lytter til port 80. Containeren linker til Python flask containeren. 
+#    En nginx.conf file kan findes på github - bemærk at nginx konfigurations filen forventer 
+#    at flask containeren hedder "flask". 
+#    Konfigurations filen over føres til nginx containeren via en volume mapping 
+# 2. container: En python-flask app (se github), der linker til postgres containeren 
+# 3. container: en Postgres database, hvor volume mapping sikrer backup på host fil systemet.
+
+version: '3'
+
+services:
+ 
+  website:
+    image: nginx:latest
+    volumes:
+      - ./website/nginx.conf:/etc/nginx/conf:ro
+    ports:
+      - 5000:80
+    links:
+      - flask
+      
+  flask:
+    build: ./flask
+    ports:
+      - 5001:80
+    links:
+      - database
+      
+  database:
+    image: postgres:latest
+    environment:
+        POSTGRES_PASSWORD: testpassword
+        POSTGRES_USER: testlogin
+        PGDATA: ./database:/var/lib/postgresql/data:rw
+    volumes:
+      - ./database:/var/lib/postgresql/data:rw
+    ports:
+      - 5432:5432
